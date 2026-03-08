@@ -414,11 +414,56 @@ function getPokerHand(cards) {
   return 'High Card';
 }
 
+function getHandAdvice(cards, handType) {
+  if (!cards.length) {
+    return 'Выбери карты снизу. Для старта проще всего ловить пару или две пары.';
+  }
+
+  const suits = {};
+  const values = {};
+  for (const card of cards) {
+    suits[card.suit] = (suits[card.suit] || 0) + 1;
+    values[card.value] = (values[card.value] || 0) + 1;
+  }
+
+  const maxSuit = Math.max(...Object.values(suits));
+  const pairCount = Object.values(values).filter(v => v >= 2).length;
+  const topValue = Math.max(...cards.map(rankValue));
+  const lowValue = Math.min(...cards.map(rankValue));
+  const spread = topValue - lowValue;
+
+  switch (handType) {
+    case 'High Card':
+      if (maxSuit >= 3) return 'Похоже на заготовку под флеш: попробуй добрать карты той же масти.';
+      if (spread <= 4 && cards.length >= 3) return 'Похоже на заготовку под стрит: попробуй добрать соседние значения.';
+      return 'Пока рука слабая. Обычно лучше искать пару, две пары или заход на стрит/флеш.';
+    case 'Pair':
+      if (pairCount >= 2) return 'Уже есть база под две пары или фулл-хаус. Ищи ещё совпадение по значению.';
+      return 'Пара — нормальный старт. Дальше обычно выгодно расти в две пары, тройку или фулл-хаус.';
+    case 'Two Pair':
+      return 'Уже хорошая база. Лучшее продолжение — фулл-хаус.';
+    case 'Three of a Kind':
+      return 'Тройка — сильная рука. Дальше ищи фулл-хаус или каре.';
+    case 'Straight':
+      return 'Стрит хорош сам по себе. Особенно силён, если у тебя бонусы на стриты или X-множители.';
+    case 'Flush':
+      return 'Флеш обычно очень выгодный. Если есть бонусы на масти — это уже почти готовый разнос.';
+    case 'Full House':
+      return 'Фулл-хаус — очень сильная рука. Можно смело разгонять счёт.';
+    case 'Four of a Kind':
+      return 'Каре — почти всегда огромный счёт. Здесь уже особенно важны X-множители.';
+    case 'Straight Flush':
+      return 'Это одна из лучших рук. Если ещё есть сильные джокеры — счёт улетит в космос.';
+    default:
+      return 'Смотри на формулу в центре: по ней сразу видно, стоит ли играть руку.';
+  }
+}
+
 function evaluateSelection(cards) {
   if (!cards.length) {
     const bossText = state.boss
       ? `Босс: ${state.boss.name}. ${state.boss.desc}`
-      : 'Выбирай карты снизу. Формула всегда считается честно и показана в центре.';
+      : 'Выбирай карты снизу. Для старта проще всего собирать пару, две пары или заход на флеш.';
     return {
       handType: 'High Card',
       handName: 'Выбери до 5 карт',
@@ -466,7 +511,7 @@ function evaluateSelection(cards) {
     switch (card.enhancement) {
       case 'wild':
         ctx.mult += 6;
-        ctx.note('Дикая карта +6 множ.');
+        ctx.note('Дикая карта: +6 к множителю');
         ctx.fx.beams = true;
         break;
       case 'glass':
@@ -484,7 +529,7 @@ function evaluateSelection(cards) {
       case 'solar':
         ctx.chips += 26;
         ctx.mult += 4;
-        ctx.note('Солнечная карта +26 фишек и +4 множ.');
+        ctx.note('Солнечная карта: +26 фишек и +4 к множителю');
         ctx.fx.explosion = true;
         break;
       case 'lucky':
@@ -492,7 +537,7 @@ function evaluateSelection(cards) {
         ctx.mult += 3 + state.meta.luckyBoost * 2;
         if (card.value === '7' || card.value === 'A') {
           ctx.mult += 7 + state.meta.luckyBoost * 2;
-          ctx.note('Удачливая карта на 7/A выстрелила сильнее.');
+          ctx.note('Удачливая карта на 7/A сработала особенно сильно.');
         } else {
           ctx.note('Удачливая карта дала бонус.');
         }
@@ -531,7 +576,7 @@ function evaluateSelection(cards) {
     ctx.mult += 15 + state.meta.overheatBonus;
     ctx.xmult *= 1.35;
     ctx.overheat = true;
-    ctx.note(`ПЕРЕГРЕВ +${15 + state.meta.overheatBonus} множ. и X1.35`);
+    ctx.note(`ПЕРЕГРЕВ: +${15 + state.meta.overheatBonus} к множителю и X1.35`);
     ctx.fx.explosion = true;
     ctx.fx.flash = true;
     ctx.fx.beams = true;
@@ -557,7 +602,7 @@ function evaluateSelection(cards) {
         break;
       case 'inferno':
         ctx.mult += 4;
-        ctx.note('Босс ИНФЕРНО дал +4 множ.');
+        ctx.note('Босс ИНФЕРНО дал +4 к множителю.');
         ctx.fx.flash = true;
         break;
     }
@@ -589,7 +634,9 @@ function evaluateSelection(cards) {
     xmult: ctx.xmult,
     total,
     formula,
-    note: ctx.notes.length ? ctx.notes.join(' • ') : 'Без дополнительных бонусов.',
+    note: ctx.notes.length
+      ? `${ctx.notes.join(' • ')} • ${getHandAdvice(cards, handType)}`
+      : getHandAdvice(cards, handType),
     fx: ctx.fx,
     overheat: ctx.overheat
   };
@@ -760,10 +807,12 @@ function rewardForWin(lastResult) {
   if (state.heat >= 80) reward += 2;
   if (state.boss) reward += state.meta.bossReward;
 
-  if (state.boss?.id === 'titan' &&
-      (lastResult.handType === 'Four of a Kind' ||
-       lastResult.handType === 'Straight Flush' ||
-       lastResult.handType === 'Full House')) {
+  if (
+    state.boss?.id === 'titan' &&
+    (lastResult.handType === 'Four of a Kind' ||
+      lastResult.handType === 'Straight Flush' ||
+      lastResult.handType === 'Full House')
+  ) {
     reward += 4;
   }
 
@@ -819,8 +868,8 @@ function renderRoute() {
   buildRoomChoices();
 
   el.routeText.textContent = state.boss
-    ? `Босс ${state.boss.name} позади. Выбери, как готовиться к следующему блайнду.`
-    : 'После победы выбери одну комнату. Всё подписано прямо на карточках.';
+    ? `Босс ${state.boss.name} позади. Теперь решай, как усиливаться дальше.`
+    : 'Раунд пройден. Выбери, что делать дальше.';
 
   el.routeList.innerHTML = state.roomChoices.map(room => `
     <div class="route-card ${room.type}">
@@ -971,7 +1020,7 @@ function resolveIntermission(message, scene = 'base') {
   updateUI();
   saveGame();
   FX.setScene(scene);
-  if (message) FX.floating('ГОТОВО', message, '#4ade80');
+  if (message) FX.floating('ВЗЯТО', message, '#4ade80');
 }
 
 function chooseRoom(roomId) {
@@ -1008,7 +1057,7 @@ function openForgeEvent() {
   closeRoute();
   openEvent({
     title: 'КУЗНИЦА',
-    text: 'Выбери, как усилить забег. Здесь всё без скрытых штрафов.',
+    text: 'Выбери, как усилить забег. Тут всё без скрытых штрафов.',
     scene: 'cataclysm',
     options: [
       {
@@ -1063,10 +1112,10 @@ function handleEventOption(index) {
 }
 
 function showResult() {
-  el.resultTitle.textContent = 'ЗАБЕГ ОКОНЧЕН';
-  el.resultText.textContent = 'Очков не хватило до цели.';
+  el.resultTitle.textContent = 'ЗАБЕГ КОНЧИЛСЯ';
+  el.resultText.textContent = 'До цели не хватило очков.';
   el.resultBig.textContent = `${state.currentScore} / ${state.targetScore}`;
-  el.resultSmall.textContent = `Ты дошел до блайнда ${state.level}. Джокеры, реликвии, накал и деньги будут сброшены.`;
+  el.resultSmall.textContent = `Ты дошёл до блайнда ${state.level}. Джокеры, реликвии, накал и деньги будут сброшены.`;
   el.resultOverlay.classList.add('show');
   el.resultOverlay.setAttribute('aria-hidden', 'false');
   FX.setScene('base');
@@ -1151,7 +1200,7 @@ el.confirmAcceptBtn.addEventListener('click', () => {
 
 el.shopSkipBtn.addEventListener('click', () => {
   closeShop();
-  resolveIntermission('Лавка завершена', 'base');
+  resolveIntermission('Лавка закрыта', 'base');
 });
 
 el.shopDoneBtn.addEventListener('click', () => {
