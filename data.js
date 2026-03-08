@@ -31,15 +31,15 @@ const BASE_HANDS = {
 };
 
 const ENHANCEMENTS = [
-  { id: 'wild', tag: 'WILD', weight: 8, desc: 'Считается любой мастью для флеша. +6 множителя.' },
-  { id: 'glass', tag: 'GLASS', weight: 8, desc: '+16 фишек и X1.25.' },
-  { id: 'void', tag: 'VOID', weight: 6, desc: '+10 фишек, X1.2 и эффекты пустоты.' },
-  { id: 'solar', tag: 'SOL', weight: 7, desc: '+26 фишек и +4 множителя.' },
-  { id: 'lucky', tag: 'LUCK', weight: 7, desc: '+8 фишек, +3 множителя, а 7/A дают еще бонус.' },
-  { id: 'steel', tag: 'STEEL', weight: 7, desc: '+14 фишек и +5 множителя.' },
-  { id: 'neon', tag: 'NEON', weight: 7, desc: '+4 множителя и X1.12.' },
-  { id: 'echo', tag: 'ECHO', weight: 6, desc: 'Если есть дубликат ранга, +18 фишек.' },
-  { id: 'cursed', tag: 'CURSE', weight: 4, desc: '+34 фишки, но -5 множителя.' }
+  { id: 'wild', tag: 'WILD', weight: 8, desc: 'Подходит под любую масть для флеша. Ещё даёт +6 к множителю.' },
+  { id: 'glass', tag: 'GLASS', weight: 8, desc: 'Даёт +16 фишек и X1.25.' },
+  { id: 'void', tag: 'VOID', weight: 6, desc: 'Даёт +10 фишек, X1.2 и включает пустотные эффекты.' },
+  { id: 'solar', tag: 'SOL', weight: 7, desc: 'Даёт +26 фишек и +4 к множителю.' },
+  { id: 'lucky', tag: 'LUCK', weight: 7, desc: 'Даёт +8 фишек и +3 к множителю. Семёрка и туз усиливаются ещё сильнее.' },
+  { id: 'steel', tag: 'STEEL', weight: 7, desc: 'Даёт +14 фишек и +5 к множителю.' },
+  { id: 'neon', tag: 'NEON', weight: 7, desc: 'Даёт +4 к множителю и X1.12.' },
+  { id: 'echo', tag: 'ECHO', weight: 6, desc: 'Если в руке есть такая же карта по значению, даёт бонус.' },
+  { id: 'cursed', tag: 'CURSE', weight: 4, desc: 'Много фишек сразу, но режет множитель.' }
 ];
 
 const ENHANCEMENT_BY_ID = Object.fromEntries(
@@ -49,116 +49,116 @@ const ENHANCEMENT_BY_ID = Object.fromEntries(
 const JOKERS = [
   {
     id: 'riot_core',
-    name: 'Ядро Бунта',
+    name: 'Ядро бунта',
     rarity: 'rare',
     price: 9,
-    desc: '+10 к множителю, если накал 70%+.',
+    desc: 'Если накал 70% или выше, даёт +10 к множителю.',
     apply(ctx) {
       if (ctx.heat >= 70) {
         ctx.mult += 10;
-        ctx.note('Ядро Бунта +10 множ.');
+        ctx.note('Ядро бунта: +10 к множителю');
         ctx.fx.flash = true;
       }
     }
   },
   {
     id: 'prism_eye',
-    name: 'Глаз Призмы',
+    name: 'Глаз призмы',
     rarity: 'rare',
     price: 10,
-    desc: '+20 к множителю, если в руке 4 разные масти.',
+    desc: 'Если в руке 4 разные масти, даёт +20 к множителю.',
     apply(ctx) {
       const suitCount = new Set(ctx.cards.map(card => card.suit)).size;
       if (suitCount === 4) {
         ctx.mult += 20;
-        ctx.note('Глаз Призмы +20 множ.');
+        ctx.note('Глаз призмы: +20 к множителю');
         ctx.fx.beams = true;
       }
     }
   },
   {
     id: 'meteor_smile',
-    name: 'Улыбка Метеора',
+    name: 'Улыбка метеора',
     rarity: 'common',
     price: 8,
-    desc: '+12 фишек за каждую сыгранную карту.',
+    desc: 'Даёт +12 фишек за каждую сыгранную карту.',
     apply(ctx) {
       const bonus = ctx.cards.length * 12;
       ctx.chips += bonus;
-      ctx.note(`Улыбка Метеора +${bonus} фишек`);
+      ctx.note(`Улыбка метеора: +${bonus} фишек`);
       ctx.fx.meteors = true;
     }
   },
   {
     id: 'void_mouth',
-    name: 'Пасть Пустоты',
+    name: 'Пасть пустоты',
     rarity: 'rare',
     price: 11,
-    desc: 'Если есть дикая или пустотная карта, X1.5.',
+    desc: 'Если есть дикая или пустотная карта, даёт X1.5.',
     apply(ctx) {
       if (ctx.hasEnhancement('wild') || ctx.hasEnhancement('void')) {
         ctx.xmult *= 1.5;
-        ctx.note('Пасть Пустоты X1.5');
+        ctx.note('Пасть пустоты: X1.5');
         ctx.fx.blackHole = true;
       }
     }
   },
   {
     id: 'blood_mirror',
-    name: 'Кровавое Зеркало',
+    name: 'Кровавое зеркало',
     rarity: 'common',
     price: 8,
-    desc: '+4 к множителю за каждую ♥ и ♦.',
+    desc: 'Даёт +4 к множителю за каждую ♥ и ♦.',
     apply(ctx) {
       const redCount = ctx.cards.filter(card => card.suit === '♥' || card.suit === '♦').length;
       if (redCount > 0) {
         const bonus = redCount * 4;
         ctx.mult += bonus;
-        ctx.note(`Кровавое Зеркало +${bonus} множ.`);
+        ctx.note(`Кровавое зеркало: +${bonus} к множителю`);
         ctx.fx.flash = true;
       }
     }
   },
   {
     id: 'solar_crown',
-    name: 'Солнечная Корона',
+    name: 'Солнечная корона',
     rarity: 'rare',
     price: 11,
-    desc: '+18 фишек за каждую J, Q, K, A.',
+    desc: 'Даёт +18 фишек за каждую J, Q, K и A.',
     apply(ctx) {
       const faceCount = ctx.cards.filter(card => ['J', 'Q', 'K', 'A'].includes(card.value)).length;
       if (faceCount > 0) {
         const bonus = faceCount * 18;
         ctx.chips += bonus;
-        ctx.note(`Солнечная Корона +${bonus} фишек`);
+        ctx.note(`Солнечная корона: +${bonus} фишек`);
         ctx.fx.explosion = true;
       }
     }
   },
   {
     id: 'spiral_engine',
-    name: 'Спиральный Двигатель',
+    name: 'Спиральный двигатель',
     rarity: 'rare',
     price: 10,
-    desc: '+12 к множителю для стрита и стрит-флеша.',
+    desc: 'Стрит и стрит-флеш получают +12 к множителю.',
     apply(ctx) {
       if (ctx.handType === 'Straight' || ctx.handType === 'Straight Flush') {
         ctx.mult += 12;
-        ctx.note('Спиральный Двигатель +12 множ.');
+        ctx.note('Спиральный двигатель: +12 к множителю');
         ctx.fx.beams = true;
       }
     }
   },
   {
     id: 'abyss_clock',
-    name: 'Часы Бездны',
+    name: 'Часы бездны',
     rarity: 'legendary',
     price: 14,
-    desc: 'На последней руке X2.4.',
+    desc: 'На последней руке даёт X2.4.',
     apply(ctx) {
       if (ctx.handsLeftBefore === 1) {
         ctx.xmult *= 2.4;
-        ctx.note('Часы Бездны X2.4');
+        ctx.note('Часы бездны: X2.4');
         ctx.fx.blackHole = true;
         ctx.fx.flash = true;
       }
@@ -166,115 +166,115 @@ const JOKERS = [
   },
   {
     id: 'twin_mask',
-    name: 'Двойная Маска',
+    name: 'Двойная маска',
     rarity: 'common',
     price: 7,
-    desc: '+10 к множителю для пары, двух пар и фулл-хауса.',
+    desc: 'Пара, две пары и фулл-хаус получают +10 к множителю.',
     apply(ctx) {
       if (ctx.handType === 'Pair' || ctx.handType === 'Two Pair' || ctx.handType === 'Full House') {
         ctx.mult += 10;
-        ctx.note('Двойная Маска +10 множ.');
+        ctx.note('Двойная маска: +10 к множителю');
       }
     }
   },
   {
     id: 'glass_printer',
-    name: 'Стеклянный Принтер',
+    name: 'Стеклянный принтер',
     rarity: 'rare',
     price: 10,
-    desc: 'Если есть стеклянная карта, X1.6.',
+    desc: 'Если есть стеклянная карта, даёт X1.6.',
     apply(ctx) {
       if (ctx.hasEnhancement('glass')) {
         ctx.xmult *= 1.6;
-        ctx.note('Стеклянный Принтер X1.6');
+        ctx.note('Стеклянный принтер: X1.6');
         ctx.fx.flash = true;
       }
     }
   },
   {
     id: 'forge_hammer',
-    name: 'Молот Кузни',
+    name: 'Молот кузни',
     rarity: 'common',
     price: 8,
-    desc: '+10 фишек за каждую супер-карту в руке.',
+    desc: 'Даёт +10 фишек за каждую усиленную карту в руке.',
     apply(ctx) {
       if (ctx.enhancedCount > 0) {
         const bonus = ctx.enhancedCount * 10;
         ctx.chips += bonus;
-        ctx.note(`Молот Кузни +${bonus} фишек`);
+        ctx.note(`Молот кузни: +${bonus} фишек`);
       }
     }
   },
   {
     id: 'crown_of_flush',
-    name: 'Корона Флеша',
+    name: 'Корона флеша',
     rarity: 'legendary',
     price: 13,
     desc: 'Флеш и стрит-флеш получают X1.8.',
     apply(ctx) {
       if (ctx.handType === 'Flush' || ctx.handType === 'Straight Flush') {
         ctx.xmult *= 1.8;
-        ctx.note('Корона Флеша X1.8');
+        ctx.note('Корона флеша: X1.8');
         ctx.fx.beams = true;
       }
     }
   },
   {
     id: 'steel_hunger',
-    name: 'Стальной Голод',
+    name: 'Стальной голод',
     rarity: 'rare',
     price: 10,
-    desc: 'Если есть стальная карта, +40 фишек и +6 множителя.',
+    desc: 'Если есть стальная карта, даёт +40 фишек и +6 к множителю.',
     apply(ctx) {
       if (ctx.hasEnhancement('steel')) {
         ctx.chips += 40;
         ctx.mult += 6;
-        ctx.note('Стальной Голод +40 фишек и +6 множ.');
+        ctx.note('Стальной голод: +40 фишек и +6 к множителю');
       }
     }
   },
   {
     id: 'jackpot_orbit',
-    name: 'Орбита Джекпота',
+    name: 'Орбита джекпота',
     rarity: 'rare',
     price: 11,
-    desc: 'Если сыграно ровно 5 карт, +25 фишек и X1.5.',
+    desc: 'Если сыграно ровно 5 карт, даёт +25 фишек и X1.5.',
     apply(ctx) {
       if (ctx.cards.length === 5) {
         ctx.chips += 25;
         ctx.xmult *= 1.5;
-        ctx.note('Орбита Джекпота +25 фишек и X1.5');
+        ctx.note('Орбита джекпота: +25 фишек и X1.5');
         ctx.fx.explosion = true;
       }
     }
   },
   {
     id: 'chaos_tower',
-    name: 'Башня Хаоса',
+    name: 'Башня хаоса',
     rarity: 'rare',
     price: 10,
-    desc: 'Если в руке 3+ масти, +8 множителя и X1.4.',
+    desc: 'Если в руке 3 или больше мастей, даёт +8 к множителю и X1.4.',
     apply(ctx) {
       const suits = new Set(ctx.cards.map(card => card.suit)).size;
       if (suits >= 3) {
         ctx.mult += 8;
         ctx.xmult *= 1.4;
-        ctx.note('Башня Хаоса +8 множ. и X1.4');
+        ctx.note('Башня хаоса: +8 к множителю и X1.4');
       }
     }
   },
   {
     id: 'supernova_laugh',
-    name: 'Смех Сверхновой',
+    name: 'Смех сверхновой',
     rarity: 'legendary',
     price: 14,
-    desc: 'Если 2+ картинок или тузов, +30 фишек и X1.25.',
+    desc: 'Если есть хотя бы 2 картинки или туза, даёт +30 фишек и X1.25.',
     apply(ctx) {
       const faceCount = ctx.cards.filter(card => ['J', 'Q', 'K', 'A'].includes(card.value)).length;
       if (faceCount >= 2) {
         ctx.chips += 30;
         ctx.xmult *= 1.25;
-        ctx.note('Смех Сверхновой +30 фишек и X1.25');
+        ctx.note('Смех сверхновой: +30 фишек и X1.25');
         ctx.fx.explosion = true;
         ctx.fx.flash = true;
       }
@@ -282,14 +282,14 @@ const JOKERS = [
   },
   {
     id: 'reactor_angel',
-    name: 'Ангел Реактора',
+    name: 'Ангел реактора',
     rarity: 'rare',
     price: 11,
-    desc: 'Накал 90%+ дает X1.8.',
+    desc: 'Если накал 90% или выше, даёт X1.8.',
     apply(ctx) {
       if (ctx.heat >= 90) {
         ctx.xmult *= 1.8;
-        ctx.note('Ангел Реактора X1.8');
+        ctx.note('Ангел реактора: X1.8');
         ctx.fx.flash = true;
         ctx.fx.explosion = true;
       }
@@ -297,28 +297,28 @@ const JOKERS = [
   },
   {
     id: 'cheap_trick',
-    name: 'Дешевый Фокус',
+    name: 'Дешёвый фокус',
     rarity: 'common',
     price: 7,
     desc: 'Старшая карта и пара получают +22 фишки.',
     apply(ctx) {
       if (ctx.handType === 'High Card' || ctx.handType === 'Pair') {
         ctx.chips += 22;
-        ctx.note('Дешевый Фокус +22 фишки');
+        ctx.note('Дешёвый фокус: +22 фишки');
       }
     }
   },
   {
     id: 'echo_well',
-    name: 'Колодец Эха',
+    name: 'Колодец эха',
     rarity: 'rare',
     price: 10,
-    desc: 'Если есть эхо-карта, X1.5 и +10 множителя.',
+    desc: 'Если есть эхо-карта, даёт X1.5 и +10 к множителю.',
     apply(ctx) {
       if (ctx.hasEnhancement('echo')) {
         ctx.xmult *= 1.5;
         ctx.mult += 10;
-        ctx.note('Колодец Эха X1.5 и +10 множ.');
+        ctx.note('Колодец эха: X1.5 и +10 к множителю');
       }
     }
   }
@@ -329,17 +329,17 @@ const JOKER_BY_ID = Object.fromEntries(JOKERS.map(item => [item.id, item]));
 const RELICS = [
   {
     id: 'forge_core',
-    name: 'Ядро Кузницы',
+    name: 'Ядро кузницы',
     rarity: 'rare',
     price: 9,
-    desc: '+8% к шансу супер-карт.',
+    desc: 'Чаще выпадают усиленные карты.',
     key: 'superRate',
     delta: 1,
     max: 4
   },
   {
     id: 'extra_hand',
-    name: 'Лишняя Рука',
+    name: 'Лишняя рука',
     rarity: 'legendary',
     price: 12,
     desc: '+1 рука каждый раунд.',
@@ -349,7 +349,7 @@ const RELICS = [
   },
   {
     id: 'extra_discard',
-    name: 'Панель Сброса',
+    name: 'Панель сброса',
     rarity: 'rare',
     price: 9,
     desc: '+1 сброс каждый раунд.',
@@ -359,70 +359,70 @@ const RELICS = [
   },
   {
     id: 'vault_bonus',
-    name: 'Золотой Накопитель',
+    name: 'Золотой накопитель',
     rarity: 'common',
     price: 7,
-    desc: '+3 монеты за победу.',
+    desc: '+3 монеты за каждую победу.',
     key: 'rewardBonus',
     delta: 3,
     max: 3
   },
   {
     id: 'overheat_core',
-    name: 'Сердце Перегрева',
+    name: 'Сердце перегрева',
     rarity: 'legendary',
     price: 12,
-    desc: 'Перегрев дает еще +6 множителя.',
+    desc: 'Перегрев становится сильнее.',
     key: 'overheatBonus',
     delta: 6,
     max: 2
   },
   {
     id: 'starter_heat',
-    name: 'Тепловой Запуск',
+    name: 'Тепловой старт',
     rarity: 'rare',
     price: 9,
-    desc: 'Каждый раунд начинается с +15% накала.',
+    desc: 'Каждый раунд начинается с накалом.',
     key: 'startHeat',
     delta: 1,
     max: 3
   },
   {
     id: 'void_lens',
-    name: 'Линза Пустоты',
+    name: 'Линза пустоты',
     rarity: 'rare',
     price: 10,
-    desc: 'Пустотные карты сильнее.',
+    desc: 'Пустотные карты становятся сильнее.',
     key: 'voidBoost',
     delta: 1,
     max: 3
   },
   {
     id: 'glass_lab',
-    name: 'Стеклянная Лаборатория',
+    name: 'Стеклянная лаборатория',
     rarity: 'rare',
     price: 10,
-    desc: 'Стеклянные карты сильнее.',
+    desc: 'Стеклянные карты становятся сильнее.',
     key: 'glassBoost',
     delta: 1,
     max: 3
   },
   {
     id: 'lucky_star',
-    name: 'Счастливая Звезда',
+    name: 'Счастливая звезда',
     rarity: 'rare',
     price: 10,
-    desc: 'Удачливые карты сильнее.',
+    desc: 'Удачливые карты становятся сильнее.',
     key: 'luckyBoost',
     delta: 1,
     max: 3
   },
   {
     id: 'boss_purse',
-    name: 'Кошель Босса',
+    name: 'Кошель босса',
     rarity: 'legendary',
     price: 12,
-    desc: '+4 монеты за победу над боссом.',
+    desc: 'Победа над боссом даёт больше монет.',
     key: 'bossReward',
     delta: 4,
     max: 2
@@ -444,7 +444,7 @@ const BOSS_BLINDS = [
     name: 'ПУСТОТА',
     scene: 'void',
     targetMul: 1.14,
-    desc: '+14% к цели. X-множители сильнее, но опаснее.'
+    desc: '+14% к цели. X-множители становятся сильнее.'
   },
   {
     id: 'storm',
@@ -458,45 +458,45 @@ const BOSS_BLINDS = [
     name: 'ТИТАН',
     scene: 'cataclysm',
     targetMul: 1.30,
-    desc: '+30% к цели. Большие руки дают больше награды.'
+    desc: '+30% к цели. Сильные руки приносят больше награды.'
   }
 ];
 
 const ROOM_POOL = [
   {
     id: 'shop',
-    name: 'ЛАВКА',
+    name: 'Лавка',
     type: 'safe',
     desc: 'Купить джокеры и реликвии за монеты.',
-    extra: 'Без штрафов.'
+    extra: 'Спокойный вариант.'
   },
   {
     id: 'event',
-    name: 'СОБЫТИЕ',
+    name: 'Событие',
     type: 'risky',
-    desc: 'Случайный выбор: можно очень усилиться, но иногда есть цена.',
-    extra: 'Опасные варианты всегда показывают предупреждение.'
+    desc: 'Можно хорошо усилиться, но иногда придётся чем-то заплатить.',
+    extra: 'Опасные варианты всегда помечены.'
   },
   {
     id: 'vault',
-    name: 'ХРАНИЛИЩЕ',
+    name: 'Хранилище',
     type: 'safe',
-    desc: 'Мгновенно получить монеты.',
+    desc: 'Быстрые монеты без подвоха.',
     extra: '+8–16 монет.'
   },
   {
     id: 'rest',
-    name: 'ПЕРЕДЫШКА',
+    name: 'Передышка',
     type: 'safe',
-    desc: 'Сбросить накал и получить помощь в следующем раунде.',
-    extra: '-25% накала и +1 рука на следующий раунд.'
+    desc: 'Сбросить часть накала и облегчить следующий раунд.',
+    extra: '-25% накала и +1 рука.'
   },
   {
     id: 'forge',
-    name: 'КУЗНИЦА',
+    name: 'Кузница',
     type: 'special',
-    desc: 'Выбрать одно улучшение забега.',
-    extra: 'Усиляет конкретный стиль игры.'
+    desc: 'Выбрать одно постоянное усиление забега.',
+    extra: 'Работает на перспективу.'
   }
 ];
 
@@ -504,14 +504,14 @@ const EVENTS = [
   {
     id: 'void_deal',
     title: 'СДЕЛКА ПУСТОТЫ',
-    text: 'Разлом шепчет: “Я дам силу сейчас, но цену ты вспомнишь потом.”',
+    text: 'Разлом шепчет: «Я дам силу сейчас, но цену ты вспомнишь потом».',
     scene: 'void',
     options: [
       {
         label: 'Принять сделку',
         preview: '+1 случайный легендарный джокер, но -1 рука в следующем раунде.',
         warningTitle: 'СДЕЛКА ПУСТОТЫ',
-        warningText: 'Ты получишь очень сильный джокер, но следующий блайнд начнется с одной рукой меньше.',
+        warningText: 'Получишь очень сильный джокер, но следующий блайнд начнётся с одной рукой меньше.',
         apply(state) {
           const joker = giveRandomJoker(state, 'legendary');
           state.temp.extraHands -= 1;
@@ -521,20 +521,20 @@ const EVENTS = [
         }
       },
       {
-        label: 'Собрать пыль',
+        label: 'Собрать осколки',
         preview: '+10 монет и +20% накала.',
         apply(state) {
           state.money += 10;
           state.heat = Math.min(100, state.heat + 20);
-          return 'Ты вытащил 10 монет и поднял накал.';
+          return 'Ты забрал 10 монет и поднял накал.';
         }
       },
       {
-        label: 'Осторожно отступить',
+        label: 'Отойти без шума',
         preview: '+1 сброс в следующем раунде.',
         apply(state) {
           state.temp.extraDiscards += 1;
-          return 'Следующий раунд начнется с +1 сбросом.';
+          return 'Следующий раунд начнётся с +1 сбросом.';
         }
       }
     ]
@@ -542,38 +542,38 @@ const EVENTS = [
   {
     id: 'shattered_atm',
     title: 'РАЗБИТЫЙ БАНКОМАТ',
-    text: 'Автомат искрит. Можно аккуратно забрать деньги, а можно раскурочить его до конца.',
+    text: 'Автомат искрит. Можно снять деньги аккуратно, а можно выбить всё сразу.',
     scene: 'storm',
     options: [
       {
-        label: 'Вскрыть тихо',
+        label: 'Забрать спокойно',
         preview: '+8 монет без штрафа.',
         apply(state) {
           state.money += 8;
-          return 'Ты тихо забрал 8 монет.';
+          return 'Ты спокойно забрал 8 монет.';
         }
       },
       {
-        label: 'Разнести к чертям',
+        label: 'Разнести его',
         preview: '+16 монет, но +30% накала.',
         warningTitle: 'ЛОМАЕМ БАНКОМАТ',
         warningText: 'Монет будет больше, но накал резко подскочит уже сейчас.',
         apply(state) {
           state.money += 16;
           state.heat = Math.min(100, state.heat + 30);
-          return 'Ты выбил 16 монет, но стол пошел в перегруз.';
+          return 'Ты выбил 16 монет, но стол пошёл в перегруз.';
         }
       }
     ]
   },
   {
     id: 'star_forge',
-    title: 'ЗВЕЗДНАЯ КУЗНЯ',
-    text: 'Над столом висит раскаленное кольцо. Оно усиливает карты, но требует выбрать направление.',
+    title: 'ЗВЁЗДНАЯ КУЗНЯ',
+    text: 'Над столом висит раскалённое кольцо. Оно усиливает карты, если выбрать путь.',
     scene: 'cataclysm',
     options: [
       {
-        label: 'Питать супер-карты',
+        label: 'Кормить супер-карты',
         preview: '+8% к шансу супер-карт навсегда.',
         apply(state) {
           state.meta.superRate += 1;
@@ -582,18 +582,18 @@ const EVENTS = [
       },
       {
         label: 'Стеклянный путь',
-        preview: 'Стеклянные карты навсегда сильнее.',
+        preview: 'Стеклянные карты становятся сильнее навсегда.',
         apply(state) {
           state.meta.glassBoost += 1;
-          return 'Стеклянные карты стали сильнее.';
+          return 'Стеклянные карты усилены.';
         }
       },
       {
         label: 'Пустотный путь',
-        preview: 'Пустотные карты навсегда сильнее.',
+        preview: 'Пустотные карты становятся сильнее навсегда.',
         apply(state) {
           state.meta.voidBoost += 1;
-          return 'Пустотные карты стали сильнее.';
+          return 'Пустотные карты усилены.';
         }
       }
     ]
@@ -601,11 +601,11 @@ const EVENTS = [
   {
     id: 'nurse_of_heat',
     title: 'МЕДСЕСТРА НАКАЛА',
-    text: 'Тебе предлагают охладить установку или наоборот завести ее еще сильнее.',
+    text: 'Тебе предлагают остудить установку или, наоборот, разогнать её ещё сильнее.',
     scene: 'ocean',
     options: [
       {
-        label: 'Охлаждение',
+        label: 'Охладить',
         preview: '-35% накала и +1 рука в следующем раунде.',
         apply(state) {
           state.heat = Math.max(0, state.heat - 35);
@@ -614,7 +614,7 @@ const EVENTS = [
         }
       },
       {
-        label: 'Разогрев',
+        label: 'Разогнать',
         preview: '+35% накала и +1 случайный редкий джокер.',
         warningTitle: 'РАЗГОН РЕАКТОРА',
         warningText: 'Накал резко вырастет, но ты получишь редкий джокер.',
@@ -629,14 +629,14 @@ const EVENTS = [
   {
     id: 'cursed_offer',
     title: 'ПРОКЛЯТОЕ ПРЕДЛОЖЕНИЕ',
-    text: 'Тень кладет на стол темную реликвию. Она сильна, но в ней нет ничего бесплатного.',
+    text: 'Тень кладёт на стол тёмную реликвию. Сила в ней есть, но бесплатно её не отдают.',
     scene: 'inferno',
     options: [
       {
         label: 'Взять реликвию',
         preview: '+1 рука каждый раунд, но следующая цель станет на 15% выше.',
         warningTitle: 'ПРОКЛЯТАЯ РЕЛИКВИЯ',
-        warningText: 'Ты получишь сильный перманентный бонус, но следующий блайнд станет заметно тяжелее.',
+        warningText: 'Ты получишь сильный постоянный бонус, но следующий блайнд станет тяжелее.',
         apply(state) {
           state.meta.extraHands += 1;
           state.temp.targetMul *= 1.15;
@@ -644,11 +644,11 @@ const EVENTS = [
         }
       },
       {
-        label: 'Сжечь сделку',
-        preview: '+12 монет и без штрафа.',
+        label: 'Сжечь контракт',
+        preview: '+12 монет без штрафа.',
         apply(state) {
           state.money += 12;
-          return 'Ты сжег контракт и забрал 12 монет.';
+          return 'Ты сжёг контракт и забрал 12 монет.';
         }
       }
     ]
@@ -661,7 +661,7 @@ const EVENTS = [
     options: [
       {
         label: 'Играть от лицевых',
-        preview: '+1 к силе солнечных эффектов и +1 к силе удачливых карт.',
+        preview: 'Усиливает удачливые карты.',
         apply(state) {
           state.meta.luckyBoost += 1;
           return 'Лицевые и удачливые карты стали сильнее.';
@@ -672,16 +672,16 @@ const EVENTS = [
         preview: 'Перегрев навсегда становится сильнее.',
         apply(state) {
           state.meta.overheatBonus += 3;
-          return 'Перегрев стал еще опаснее и мощнее.';
+          return 'Перегрев стал ещё злее.';
         }
       },
       {
-        label: 'Играть надежно',
+        label: 'Играть надёжно',
         preview: '+1 сброс в следующем раунде и +6 монет.',
         apply(state) {
           state.temp.extraDiscards += 1;
           state.money += 6;
-          return 'Следующий раунд будет безопаснее.';
+          return 'Следующий раунд будет спокойнее.';
         }
       }
     ]
