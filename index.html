@@ -8,13 +8,13 @@
   />
   <title>Neon Riot Deck</title>
 
-  <link rel="manifest" href="./manifest.json?v=1.0.1" />
+  <link rel="manifest" href="./manifest.json?v=1.0.2" />
   <meta name="theme-color" content="#100618" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <link rel="stylesheet" href="style.css?v=1.0.1" />
+  <link rel="stylesheet" href="style.css?v=1.0.2" />
 </head>
 <body data-scene="base">
   <div class="arcade-bg"></div>
@@ -61,7 +61,7 @@
         <div class="hand-name" id="comboName">ВЫБЕРИ ДО 5 КАРТ</div>
         <div class="hand-formula" id="comboFormula">0 × 1 = 0</div>
         <div class="hand-note" id="comboNote">
-          Фишки × множитель × X-множитель. Чем сильнее рука, тем больше накал.
+          Для старта проще всего ловить пару, две пары или заход на флеш.
         </div>
       </div>
     </main>
@@ -74,46 +74,52 @@
       <button id="nextBtn" class="btn secondary" disabled>МЕЖРАУНД</button>
     </footer>
 
-    <!-- Обучение -->
     <div class="overlay" id="tutorialOverlay" aria-hidden="true">
       <div class="sheet">
         <div class="sheet-title">КАК ИГРАТЬ</div>
         <div class="sheet-subtitle">
-          Вход для новичка: быстро, без лишней духоты.
+          Коротко: собираешь руку, жмёшь «Сыграть», добираешь очки до цели.
         </div>
 
         <div class="tutorial-list">
           <div class="tutorial-card">
-            <b>1. Выбирай до 5 карт</b>
-            <span>Нажимай на карты снизу. Выбранные поднимутся вверх.</span>
+            <b>1. Нажимай на карты снизу</b>
+            <span>Можно выбрать до 5 карт. Выбранные карты поднимаются вверх.</span>
           </div>
           <div class="tutorial-card">
-            <b>2. Смотри на формулу в центре</b>
-            <span>Там всегда показан реальный расчет: фишки × множитель × X-множители.</span>
+            <b>2. Смотри на центр экрана</b>
+            <span>Там всегда показано, сколько даст рука прямо сейчас: фишки × множитель × X.</span>
           </div>
           <div class="tutorial-card">
-            <b>3. Копи накал</b>
-            <span>Сильные руки поднимают накал. На 100% включается перегрев и следующий разрыв становится жирнее.</span>
+            <b>3. Не все руки одинаково полезны</b>
+            <span>Пара — норм на старте. Стрит, флеш и фулл-хаус обычно уже дают хороший разгон.</span>
           </div>
           <div class="tutorial-card">
-            <b>4. Между раундами выбирай комнату</b>
-            <span>Лавка, событие, кузница, отдых, хранилище. Опасные вещи всегда предупреждают заранее.</span>
+            <b>4. Сильная карта — не всегда лучшая карта</b>
+            <span>Иногда выгоднее собрать комбу и бонусы, чем просто ткнуть самые большие номиналы.</span>
+          </div>
+          <div class="tutorial-card">
+            <b>5. Накал — это разгон</b>
+            <span>Чем мощнее руки, тем быстрее растёт накал. На 100% включается перегрев.</span>
+          </div>
+          <div class="tutorial-card">
+            <b>6. Между раундами думай головой</b>
+            <span>Лавка — стабильность. Событие — риск. Кузница — сила на дистанции.</span>
           </div>
         </div>
 
         <div class="sheet-actions">
-          <button id="tutorialSkipBtn" class="btn secondary">ПРОПУСТИТЬ</button>
-          <button id="tutorialStartBtn" class="btn primary">ПОГНАЛИ</button>
+          <button id="tutorialSkipBtn" class="btn secondary">ПОНЯТНО</button>
+          <button id="tutorialStartBtn" class="btn primary">ПОЕХАЛИ</button>
         </div>
       </div>
     </div>
 
-    <!-- Комнаты между раундами -->
     <div class="overlay" id="routeOverlay" aria-hidden="true">
       <div class="sheet">
         <div class="sheet-title">КУДА ДАЛЬШЕ?</div>
         <div class="sheet-subtitle" id="routeText">
-          После победы выбери одну комнату. Для новичка всё подписано прямо на карточках.
+          Раунд пройден. Выбери, что делать дальше.
         </div>
         <div class="route-list" id="routeList"></div>
         <div class="sheet-actions one">
@@ -122,7 +128,6 @@
       </div>
     </div>
 
-    <!-- Событие / кузница -->
     <div class="overlay" id="eventOverlay" aria-hidden="true">
       <div class="sheet">
         <div class="sheet-title" id="eventTitle">СОБЫТИЕ</div>
@@ -134,7 +139,6 @@
       </div>
     </div>
 
-    <!-- Предупреждение -->
     <div class="overlay" id="confirmOverlay" aria-hidden="true">
       <div class="sheet danger-sheet">
         <div class="sheet-title" id="confirmTitle">ПОДТВЕРЖДЕНИЕ</div>
@@ -144,17 +148,16 @@
         </div>
         <div class="sheet-actions">
           <button id="confirmCancelBtn" class="btn secondary">ОТМЕНА</button>
-          <button id="confirmAcceptBtn" class="btn danger">ВСЕ РАВНО ВЗЯТЬ</button>
+          <button id="confirmAcceptBtn" class="btn danger">БЕРУ</button>
         </div>
       </div>
     </div>
 
-    <!-- Лавка -->
     <div class="overlay" id="shopOverlay" aria-hidden="true">
       <div class="sheet">
         <div class="sheet-title">ЛАВКА ХАОСА</div>
         <div class="sheet-subtitle">
-          Покупай джокеры и реликвии. Реликвии усиливают забег глобально.
+          Покупай джокеры и реликвии. Реликвии усиливают забег целиком.
         </div>
         <div class="shop-balance" id="shopBalance">💰 0</div>
         <div class="shop-list" id="shopList"></div>
@@ -165,15 +168,14 @@
       </div>
     </div>
 
-    <!-- Проигрыш -->
     <div class="overlay" id="resultOverlay" aria-hidden="true">
       <div class="sheet">
-        <div class="sheet-title" id="resultTitle">ЗАБЕГ ОКОНЧЕН</div>
-        <div class="sheet-subtitle" id="resultText">Не хватило очков.</div>
+        <div class="sheet-title" id="resultTitle">ЗАБЕГ КОНЧИЛСЯ</div>
+        <div class="sheet-subtitle" id="resultText">До цели не хватило очков.</div>
         <div class="result-box">
           <div class="result-big" id="resultBig">0 / 300</div>
           <div class="result-small" id="resultSmall">
-            Попробуй собрать более злую синергию.
+            Попробуй собрать другую синергию.
           </div>
         </div>
         <div class="sheet-actions one">
@@ -183,9 +185,9 @@
     </div>
   </div>
 
-  <script src="data.js?v=1.0.1"></script>
-  <script src="effects.js?v=1.0.1"></script>
-  <script src="game.js?v=1.0.1"></script>
+  <script src="data.js?v=1.0.2"></script>
+  <script src="effects.js?v=1.0.2"></script>
+  <script src="game.js?v=1.0.2"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
@@ -193,7 +195,7 @@
 
       window.addEventListener("load", async () => {
         try {
-          const registration = await navigator.serviceWorker.register("./sw.js?v=1.0.1", {
+          const registration = await navigator.serviceWorker.register("./sw.js?v=1.0.2", {
             updateViaCache: "none"
           });
 
