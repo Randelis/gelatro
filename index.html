@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no"
+  />
+  <title>Neon Riot Deck</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json?v=1.0.0" />
+  <meta name="theme-color" content="#100618" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="stylesheet" href="style.css?v=1.0.0" />
+</head>
+<body data-scene="base">
+  <div class="arcade-bg"></div>
+
+  <div class="app" id="app">
+    <div class="fx-layer" id="fxLayer"></div>
+    <div class="float-layer" id="floatLayer"></div>
+
+    <header class="header">
+      <div class="stats-row top">
+        <span id="levelDisplay">БЛАЙНД 1</span>
+        <span id="bossTag" class="boss-tag hidden">БОСС</span>
+        <span id="moneyDisplay" class="money">💰 0</span>
+      </div>
+
+      <div class="stats-row mid">
+        <span>РУКИ <b id="handsLeft">4</b></span>
+        <span>СБРОСЫ <b id="discardsLeft">2</b></span>
+      </div>
+
+      <div class="score-line">
+        <span id="currentScore">0</span>
+        <span class="sep">/</span>
+        <span id="targetScore">300</span>
+      </div>
+
+      <div class="progress-bar">
+        <div id="goalFill"></div>
+      </div>
+
+      <div class="heat-wrap">
+        <span>НАКАЛ</span>
+        <div class="heat-bar">
+          <div id="heatFill"></div>
+        </div>
+        <b id="heatValue">0%</b>
+      </div>
+    </header>
+
+    <section class="mods-bar" id="modifierBar"></section>
+
+    <main class="center-area">
+      <div class="hand-info" id="handInfo">
+        <div class="hand-name" id="comboName">ВЫБЕРИ ДО 5 КАРТ</div>
+        <div class="hand-formula" id="comboFormula">0 × 1 = 0</div>
+        <div class="hand-note" id="comboNote">
+          Фишки × множитель × X-множитель. Чем сильнее рука, тем больше накал.
+        </div>
+      </div>
+    </main>
+
+    <section class="hand-area" id="handArea"></section>
+
+    <footer class="controls">
+      <button id="discardBtn" class="btn danger">СБРОС</button>
+      <button id="playBtn" class="btn primary">СЫГРАТЬ</button>
+      <button id="nextBtn" class="btn secondary" disabled>МЕЖРАУНД</button>
+    </footer>
+
+    <!-- Обучение -->
+    <div class="overlay" id="tutorialOverlay" aria-hidden="true">
+      <div class="sheet">
+        <div class="sheet-title">КАК ИГРАТЬ</div>
+        <div class="sheet-subtitle">
+          Вход для новичка: быстро, без лишней духоты.
+        </div>
+
+        <div class="tutorial-list">
+          <div class="tutorial-card">
+            <b>1. Выбирай до 5 карт</b>
+            <span>Нажимай на карты снизу. Выбранные поднимутся вверх.</span>
+          </div>
+          <div class="tutorial-card">
+            <b>2. Смотри на формулу в центре</b>
+            <span>Там всегда показан реальный расчет: фишки × множитель × X-множители.</span>
+          </div>
+          <div class="tutorial-card">
+            <b>3. Копи накал</b>
+            <span>Сильные руки поднимают накал. На 100% включается перегрев.</span>
+          </div>
+          <div class="tutorial-card">
+            <b>4. Между раундами выбирай комнату</b>
+            <span>Лавка, событие, кузница, отдых, хранилище. Опасные вещи всегда предупреждают заранее.</span>
+          </div>
+        </div>
+
+        <div class="sheet-actions">
+          <button id="tutorialSkipBtn" class="btn secondary">ПРОПУСТИТЬ</button>
+          <button id="tutorialStartBtn" class="btn primary">ПОГНАЛИ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Комнаты между раундами -->
+    <div class="overlay" id="routeOverlay" aria-hidden="true">
+      <div class="sheet">
+        <div class="sheet-title">КУДА ДАЛЬШЕ?</div>
+        <div class="sheet-subtitle" id="routeText">
+          После победы выбери одну комнату. Для новичка всё подписано прямо на карточках.
+        </div>
+        <div class="route-list" id="routeList"></div>
+        <div class="sheet-actions one">
+          <button id="routeCloseBtn" class="btn secondary">НАЗАД</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Событие / кузница -->
+    <div class="overlay" id="eventOverlay" aria-hidden="true">
+      <div class="sheet">
+        <div class="sheet-title" id="eventTitle">СОБЫТИЕ</div>
+        <div class="sheet-subtitle" id="eventText">Описание события.</div>
+        <div class="event-list" id="eventOptions"></div>
+        <div class="sheet-actions one">
+          <button id="eventCloseBtn" class="btn secondary">НАЗАД</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Предупреждение -->
+    <div class="overlay" id="confirmOverlay" aria-hidden="true">
+      <div class="sheet danger-sheet">
+        <div class="sheet-title" id="confirmTitle">ПОДТВЕРЖДЕНИЕ</div>
+        <div class="sheet-subtitle" id="confirmText">Сейчас произойдет что-то опасное.</div>
+        <div class="warning-box" id="confirmWarn">
+          Если выберешь это, будет плюс, но будет и цена.
+        </div>
+        <div class="sheet-actions">
+          <button id="confirmCancelBtn" class="btn secondary">ОТМЕНА</button>
+          <button id="confirmAcceptBtn" class="btn danger">ВСЕ РАВНО ВЗЯТЬ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Лавка -->
+    <div class="overlay" id="shopOverlay" aria-hidden="true">
+      <div class="sheet">
+        <div class="sheet-title">ЛАВКА ХАОСА</div>
+        <div class="sheet-subtitle">
+          Покупай джокеры и реликвии. Реликвии усиливают забег глобально.
+        </div>
+        <div class="shop-balance" id="shopBalance">💰 0</div>
+        <div class="shop-list" id="shopList"></div>
+        <div class="sheet-actions">
+          <button id="shopSkipBtn" class="btn secondary">ЗАКРЫТЬ</button>
+          <button id="shopDoneBtn" class="btn primary">ГОТОВО</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Проигрыш -->
+    <div class="overlay" id="resultOverlay" aria-hidden="true">
+      <div class="sheet">
+        <div class="sheet-title" id="resultTitle">ЗАБЕГ ОКОНЧЕН</div>
+        <div class="sheet-subtitle" id="resultText">Не хватило очков.</div>
+        <div class="result-box">
+          <div class="result-big" id="resultBig">0 / 300</div>
+          <div class="result-small" id="resultSmall">
+            Попробуй собрать более злую синергию.
+          </div>
+        </div>
+        <div class="sheet-actions one">
+          <button id="resetRunBtn" class="btn primary">НОВЫЙ ЗАБЕГ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js?v=1.0.0"></script>
+  <script src="effects.js?v=1.0.0"></script>
+  <script src="game.js?v=1.0.0"></script>
+
+  <script>
+    // Регистрация service worker и автообновление PWA
+    if ("serviceWorker" in navigator) {
+      let refreshing = false;
+
+      window.addEventListener("load", async () => {
+        try {
+          const registration = await navigator.serviceWorker.register("./sw.js?v=1.0.0", {
+            updateViaCache: "none"
+          });
+
+          // Проверяем апдейты при каждом запуске
+          registration.update();
+
+          registration.addEventListener("updatefound", () => {
+            const newWorker = registration.installing;
+            if (!newWorker) return;
+
+            newWorker.addEventListener("statechange", () => {
+              if (
+                newWorker.state === "installed" &&
+                navigator.serviceWorker.controller
+              ) {
+                newWorker.postMessage("SKIP_WAITING");
+              }
+            });
+          });
+
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (refreshing) return;
+            refreshing = true;
+            window.location.reload();
+          });
+        } catch (error) {
+          console.error("SW registration failed:", error);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
