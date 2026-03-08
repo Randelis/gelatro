@@ -1,12 +1,12 @@
-const CACHE_VERSION = "neon-riot-v1.0.1";
+const CACHE_VERSION = "neon-riot-v1.0.2";
 const APP_SHELL = [
   "./",
-  "./index.html?v=1.0.1",
-  "./style.css?v=1.0.1",
-  "./data.js?v=1.0.1",
-  "./effects.js?v=1.0.1",
-  "./game.js?v=1.0.1",
-  "./manifest.json?v=1.0.1",
+  "./index.html?v=1.0.2",
+  "./style.css?v=1.0.2",
+  "./data.js?v=1.0.2",
+  "./effects.js?v=1.0.2",
+  "./game.js?v=1.0.2",
+  "./manifest.json?v=1.0.2",
   "./icon-192.png",
   "./icon-512.png"
 ];
@@ -22,9 +22,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(
-      keys
-        .filter((key) => key !== CACHE_VERSION)
-        .map((key) => caches.delete(key))
+      keys.filter((key) => key !== CACHE_VERSION).map((key) => caches.delete(key))
     );
     await self.clients.claim();
   })());
@@ -38,7 +36,6 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-
   if (request.method !== "GET") return;
 
   event.respondWith((async () => {
@@ -56,7 +53,7 @@ self.addEventListener("fetch", (event) => {
       if (cachedResponse) return cachedResponse;
 
       if (request.mode === "navigate") {
-        return caches.match("./index.html?v=1.0.1") || caches.match("./");
+        return caches.match("./index.html?v=1.0.2") || caches.match("./");
       }
 
       throw error;
