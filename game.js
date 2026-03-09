@@ -62,6 +62,7 @@ const el = {
   comboFormula: document.getElementById('comboFormula'),
   comboNote: document.getElementById('comboNote'),
   handArea: document.getElementById('handArea'),
+  rankRow: document.getElementById('rankRow'),
 
   discardBtn: document.getElementById('discardBtn'),
   playBtn: document.getElementById('playBtn'),
@@ -307,6 +308,17 @@ function renderHand() {
   });
 
   updateCardsPosition();
+  renderRankRow();
+}
+
+function renderRankRow() {
+  if (!el.rankRow) return;
+
+  el.rankRow.innerHTML = state.hand.map(card => {
+    const selected = state.selectedCards.includes(card);
+    const red = card.suit === '♥' || card.suit === '♦';
+    return `<div class="rank-pill${selected ? ' selected' : ''}${red ? ' red' : ''}">${card.value}</div>`;
+  }).join('');
 }
 
 function updateCardsPosition() {
@@ -354,6 +366,7 @@ function toggleSelect(card) {
   }
 
   updateCardsPosition();
+  renderRankRow();
   updateSelectionPreview();
   updateButtons();
 }
