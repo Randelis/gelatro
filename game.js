@@ -429,7 +429,7 @@ function getPokerHand(cards) {
 
 function getHandAdvice(cards, handType) {
   if (!cards.length) {
-    return 'Выбери карты снизу. Для старта проще всего ловить пару или две пары.';
+    return 'Выбери карты снизу. Начни с пары или двух пар.';
   }
 
   const suits = {};
@@ -447,28 +447,28 @@ function getHandAdvice(cards, handType) {
 
   switch (handType) {
     case 'High Card':
-      if (maxSuit >= 3) return 'Похоже на заготовку под флеш: попробуй добрать карты той же масти.';
-      if (spread <= 4 && cards.length >= 3) return 'Похоже на заготовку под стрит: попробуй добрать соседние значения.';
-      return 'Пока рука слабая. Обычно лучше искать пару, две пары или заход на стрит/флеш.';
+      if (maxSuit >= 3) return 'Почти флеш: добери нужную масть.';
+      if (spread <= 4 && cards.length >= 3) return 'Почти стрит: добери соседний ранг.';
+      return 'Рука слабая. Ищи пару, две пары или заготовку.';
     case 'Pair':
-      if (pairCount >= 2) return 'Уже есть база под две пары или фулл-хаус. Ищи ещё совпадение по значению.';
-      return 'Пара — нормальный старт. Дальше обычно выгодно расти в две пары, тройку или фулл-хаус.';
+      if (pairCount >= 2) return 'Есть база под две пары или фулл-хаус.';
+      return 'Пара — норм старт. Дальше целься в две пары или тройку.';
     case 'Two Pair':
-      return 'Уже хорошая база. Лучшее продолжение — фулл-хаус.';
+      return 'Хорошо. Лучшее продолжение — фулл-хаус.';
     case 'Three of a Kind':
-      return 'Тройка — сильная рука. Дальше ищи фулл-хаус или каре.';
+      return 'Сильная база. Дальше ищи фулл-хаус или каре.';
     case 'Straight':
-      return 'Стрит хорош сам по себе. Особенно силён, если у тебя бонусы на стриты или X-множители.';
+      return 'Стрит уже хорош. Особенно с бонусами на стрит.';
     case 'Flush':
-      return 'Флеш обычно очень выгодный. Если есть бонусы на масти — это уже почти готовый разнос.';
+      return 'Флеш обычно очень выгоден. Особенно с бонусами на масти.';
     case 'Full House':
-      return 'Фулл-хаус — очень сильная рука. Можно смело разгонять счёт.';
+      return 'Фулл-хаус — сильная рука. Можно жёстко разгонять счёт.';
     case 'Four of a Kind':
-      return 'Каре — почти всегда огромный счёт. Здесь уже особенно важны X-множители.';
+      return 'Каре почти всегда даёт огромный счёт.';
     case 'Straight Flush':
-      return 'Это одна из лучших рук. Если ещё есть сильные джокеры — счёт улетит в космос.';
+      return 'Одна из лучших рук. Здесь очки легко улетают в космос.';
     default:
-      return 'Смотри на формулу в центре: по ней сразу видно, стоит ли играть руку.';
+      return 'Смотри на формулу в центре: по ней видно, стоит ли играть.';
   }
 }
 
@@ -476,7 +476,7 @@ function evaluateSelection(cards) {
   if (!cards.length) {
     const bossText = state.boss
       ? `Босс: ${state.boss.name}. ${state.boss.desc}`
-      : 'Выбирай карты снизу. Для старта проще всего собирать пару, две пары или заход на флеш.';
+      : 'Выбери карты снизу. Начни с пары, двух пар или захода на флеш.';
     return {
       handType: 'High Card',
       handName: 'Выбери до 5 карт',
@@ -530,19 +530,19 @@ function evaluateSelection(cards) {
       case 'glass':
         ctx.chips += 16 + state.meta.glassBoost * 8;
         ctx.xmult *= 1.25 + state.meta.glassBoost * 0.05;
-        ctx.note('Стеклянная карта усилила итог.');
+        ctx.note('Стеклянная карта усилила руку.');
         ctx.fx.flash = true;
         break;
       case 'void':
         ctx.chips += 10 + state.meta.voidBoost * 8;
         ctx.xmult *= 1.2 + state.meta.voidBoost * 0.05;
-        ctx.note('Пустотная карта втянула больше силы.');
+        ctx.note('Пустотная карта усилила итог.');
         ctx.fx.blackHole = true;
         break;
       case 'solar':
         ctx.chips += 26;
         ctx.mult += 4;
-        ctx.note('Солнечная карта: +26 фишек и +4 к множителю');
+        ctx.note('Солнечная карта: +26 фишек и +4 множ.');
         ctx.fx.explosion = true;
         break;
       case 'lucky':
@@ -550,7 +550,7 @@ function evaluateSelection(cards) {
         ctx.mult += 3 + state.meta.luckyBoost * 2;
         if (card.value === '7' || card.value === 'A') {
           ctx.mult += 7 + state.meta.luckyBoost * 2;
-          ctx.note('Удачливая карта на 7/A сработала особенно сильно.');
+          ctx.note('Удачливая карта на 7/A сработала сильнее.');
         } else {
           ctx.note('Удачливая карта дала бонус.');
         }
@@ -579,7 +579,7 @@ function evaluateSelection(cards) {
       case 'cursed':
         ctx.chips += 34;
         ctx.mult -= 5;
-        ctx.note('Проклятая карта дала много фишек, но срезала множитель.');
+        ctx.note('Проклятая карта: много фишек, но меньше множитель.');
         ctx.fx.blackHole = true;
         break;
     }
@@ -589,7 +589,7 @@ function evaluateSelection(cards) {
     ctx.mult += 15 + state.meta.overheatBonus;
     ctx.xmult *= 1.35;
     ctx.overheat = true;
-    ctx.note(`ПЕРЕГРЕВ: +${15 + state.meta.overheatBonus} к множителю и X1.35`);
+    ctx.note(`ПЕРЕГРЕВ: +${15 + state.meta.overheatBonus} множ. и X1.35`);
     ctx.fx.explosion = true;
     ctx.fx.flash = true;
     ctx.fx.beams = true;
@@ -599,7 +599,7 @@ function evaluateSelection(cards) {
     switch (state.boss.id) {
       case 'void':
         ctx.xmult *= 1.15;
-        ctx.note('Босс ПУСТОТА усилил X-множитель.');
+        ctx.note('Босс ПУСТОТА усилил X.');
         ctx.fx.blackHole = true;
         break;
       case 'storm':
@@ -611,11 +611,11 @@ function evaluateSelection(cards) {
         break;
       case 'titan':
         ctx.chips += 12;
-        ctx.note('Босс ТИТАН добавил +12 фишек.');
+        ctx.note('Босс ТИТАН: +12 фишек.');
         break;
       case 'inferno':
         ctx.mult += 4;
-        ctx.note('Босс ИНФЕРНО дал +4 к множителю.');
+        ctx.note('Босс ИНФЕРНО: +4 множ.');
         ctx.fx.flash = true;
         break;
     }
