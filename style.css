@@ -319,6 +319,45 @@ body[data-scene="overheat"] .arcade-bg{ filter:hue-rotate(-20deg) saturate(1.55)
   z-index:4;
 }
 
+.rank-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  margin-top:-6px;
+  margin-bottom:8px;
+  padding:0 10px;
+  min-height:24px;
+  z-index:4;
+}
+
+.rank-pill{
+  min-width:26px;
+  padding:2px 4px;
+  text-align:center;
+  font-size:13px;
+  line-height:1;
+  color:#cbd5e1;
+  background:rgba(2,6,23,.72);
+  border:1px solid #334155;
+  border-radius:999px;
+  box-shadow:0 2px 0 rgba(0,0,0,.35);
+}
+
+.rank-pill.selected{
+  color:#67e8f9;
+  border-color:#38bdf8;
+  box-shadow:0 0 10px rgba(56,189,248,.22);
+}
+
+.rank-pill.red{
+  color:#fda4af;
+}
+
+.rank-pill.selected.red{
+  color:#fecdd3;
+}
+
 .card{
   position:absolute;
   width:var(--card-w);
@@ -829,4 +868,15 @@ body[data-scene="overheat"] .arcade-bg{ filter:hue-rotate(-20deg) saturate(1.55)
   .hand-name{ font-size:24px; }
   .hand-formula{ font-size:20px; }
   .btn{ font-size:17px; }
+
+  .rank-row{
+    gap:4px;
+    padding:0 8px;
+  }
+
+  .rank-pill{
+    min-width:24px;
+    font-size:12px;
+    padding:2px 3px;
+  }
 }
