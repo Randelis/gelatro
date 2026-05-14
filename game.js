@@ -1,5 +1,21 @@
 const SAVE_KEY = 'neon_riot_run_v8';
 
+const CONFIG = {
+  HAND_SIZE: 8,
+  BASE_HANDS: 4,
+  BASE_DISCARDS: 2,
+  BASE_TARGET: 300,
+  DIFFICULTY_SCALE: 1.48,
+  HEAT_CARRY: 0.35,
+  HEAT_RESET: 28,
+  HEAT_DISCARD_REDUCTION: 12,
+  HEAT_GAIN_BASE: 14,
+  HEAT_GAIN_MAX_SCORE: 40,
+  HEAT_GAIN_SCORE_DIVISOR: 34,
+  PLAY_ANIM_DELAY: 360,
+  DISCARD_ANIM_DELAY: 180,
+};
+
 const state = {
   level: 1,
   money: 0,
@@ -61,6 +77,7 @@ const el = {
   comboName: document.getElementById('comboName'),
   comboFormula: document.getElementById('comboFormula'),
   comboNote: document.getElementById('comboNote'),
+  handCount: document.getElementById('handCount'),
   handArea: document.getElementById('handArea'),
   rankRow: document.getElementById('rankRow'),
 
@@ -142,18 +159,11 @@ function loadGame() {
     }
 
     if (data.meta && typeof data.meta === 'object') {
-      state.meta = {
-        superRate: Number.isFinite(data.meta.superRate) ? data.meta.superRate : 0,
-        extraHands: Number.isFinite(data.meta.extraHands) ? data.meta.extraHands : 0,
-        extraDiscards: Number.isFinite(data.meta.extraDiscards) ? data.meta.extraDiscards : 0,
-        rewardBonus: Number.isFinite(data.meta.rewardBonus) ? data.meta.rewardBonus : 0,
-        overheatBonus: Number.isFinite(data.meta.overheatBonus) ? data.meta.overheatBonus : 0,
-        startHeat: Number.isFinite(data.meta.startHeat) ? data.meta.startHeat : 0,
-        voidBoost: Number.isFinite(data.meta.voidBoost) ? data.meta.voidBoost : 0,
-        glassBoost: Number.isFinite(data.meta.glassBoost) ? data.meta.glassBoost : 0,
-        luckyBoost: Number.isFinite(data.meta.luckyBoost) ? data.meta.luckyBoost : 0,
-        bossReward: Number.isFinite(data.meta.bossReward) ? data.meta.bossReward : 0
-      };
+      const defaults = makeDefaultMeta();
+      state.meta = {};
+      for (const key of Object.keys(defaults)) {
+        state.meta[key] = Number.isFinite(data.meta[key]) ? data.meta[key] : 0;
+      }
     }
   } catch (err) {
     console.warn('Ошибка загрузки сохранения', err);
@@ -178,7 +188,26 @@ function shuffle(list) {
 }
 
 function targetForLevel(level) {
-  return Math.floor(300 * Math.pow(1.48, level - 1));
+  return Math.floor(CONFIG.BASE_TARGET * Math.pow(CONFIG.DIFFICULTY_SCALE, level - 1));
+}
+
+function makeDefaultMeta() {
+  return {
+    superRate: 0,
+    extraHands: 0,
+    extraDiscards: 0,
+    rewardBonus: 0,
+    overheatBonus: 0,
+    startHeat: 0,
+    voidBoost: 0,
+    glassBoost: 0,
+    luckyBoost: 0,
+    bossReward: 0
+  };
+}
+
+function makeDefaultTemp() {
+  return { extraHands: 0, extraDiscards: 0, targetMul: 1 };
 }
 
 function enhancementChance() {
@@ -246,20 +275,16 @@ function startLevel() {
   target = Math.floor(target * state.temp.targetMul);
   state.targetScore = target;
 
-  state.handsLeft = 4 + state.meta.extraHands + state.temp.extraHands + (state.boss?.id === 'storm' ? 1 : 0);
-  state.discardsLeft = Math.max(0, 2 + state.meta.extraDiscards + state.temp.extraDiscards + (state.boss?.id === 'storm' ? -1 : 0));
+  state.handsLeft = CONFIG.BASE_HANDS + state.meta.extraHands + state.temp.extraHands + (state.boss?.id === 'storm' ? 1 : 0);
+  state.discardsLeft = Math.max(0, CONFIG.BASE_DISCARDS + state.meta.extraDiscards + state.temp.extraDiscards + (state.boss?.id === 'storm' ? -1 : 0));
 
-  state.heat = clamp(Math.floor(state.heat * 0.35) + state.meta.startHeat * 15, 0, 100);
+  state.heat = clamp(Math.floor(state.heat * CONFIG.HEAT_CARRY) + state.meta.startHeat * 15, 0, 100);
 
-  state.temp = {
-    extraHands: 0,
-    extraDiscards: 0,
-    targetMul: 1
-  };
+  state.temp = makeDefaultTemp();
 
   state.deck = makeDeck();
   state.hand = [];
-  drawCards(8);
+  drawCards(CONFIG.HAND_SIZE);
 
   closeAllMidOverlays();
   closeResult();
@@ -270,7 +295,11 @@ function startLevel() {
 
 function drawCards(count) {
   for (let i = 0; i < count; i++) {
-    if (state.deck.length > 0 && state.hand.length < 8) {
+    if (state.deck.length === 0) {
+      const inHand = new Set(state.hand.map(c => c.id));
+      state.deck = shuffle(makeDeck().filter(c => !inHand.has(c.id)));
+    }
+    if (state.hand.length < 8) {
       state.hand.push(state.deck.pop());
     }
   }
@@ -472,55 +501,8 @@ function getHandAdvice(cards, handType) {
   }
 }
 
-function evaluateSelection(cards) {
-  if (!cards.length) {
-    const bossText = state.boss
-      ? `Босс: ${state.boss.name}. ${state.boss.desc}`
-      : 'Выбери карты снизу. Начни с пары, двух пар или захода на флеш.';
-    return {
-      handType: 'High Card',
-      handName: 'Выбери до 5 карт',
-      chips: 0,
-      mult: 1,
-      xmult: 1,
-      total: 0,
-      formula: '0 × 1 = 0',
-      note: bossText,
-      fx: {},
-      overheat: false
-    };
-  }
-
-  const handType = getPokerHand(cards);
-  const base = BASE_HANDS[handType];
-
-  const ctx = {
-    cards,
-    handType,
-    heat: state.heat,
-    handsLeftBefore: state.handsLeft,
-    chips: base.chips + cards.reduce((sum, card) => sum + CARD_SCORES[card.value], 0),
-    mult: base.mult,
-    xmult: 1,
-    notes: [],
-    fx: {
-      explosion: false,
-      beams: false,
-      blackHole: false,
-      flash: false,
-      meteors: false
-    },
-    overheat: false,
-    enhancedCount: cards.filter(card => !!card.enhancement).length,
-    note(msg) {
-      if (this.notes.length < 4) this.notes.push(msg);
-    },
-    hasEnhancement(id) {
-      return cards.some(card => card.enhancement === id);
-    }
-  };
-
-  for (const card of cards) {
+function applyEnhancements(ctx) {
+  for (const card of ctx.cards) {
     switch (card.enhancement) {
       case 'wild':
         ctx.mult += 6;
@@ -568,8 +550,8 @@ function evaluateSelection(cards) {
         ctx.fx.beams = true;
         break;
       case 'echo': {
-        const hasPairByValue = cards.some(other => other !== card && other.value === card.value);
-        if (hasPairByValue) {
+        const hasPair = ctx.cards.some(other => other !== card && other.value === card.value);
+        if (hasPair) {
           ctx.chips += 18;
           ctx.mult += 4;
           ctx.note('Эхо-карта поймала дубликат.');
@@ -584,47 +566,47 @@ function evaluateSelection(cards) {
         break;
     }
   }
+}
 
-  if (state.heat >= 100) {
-    ctx.mult += 15 + state.meta.overheatBonus;
-    ctx.xmult *= 1.35;
-    ctx.overheat = true;
-    ctx.note(`ПЕРЕГРЕВ: +${15 + state.meta.overheatBonus} множ. и X1.35`);
-    ctx.fx.explosion = true;
-    ctx.fx.flash = true;
-    ctx.fx.beams = true;
+function applyOverheat(ctx) {
+  if (state.heat < 100) return;
+  ctx.mult += 15 + state.meta.overheatBonus;
+  ctx.xmult *= 1.35;
+  ctx.overheat = true;
+  ctx.note(`ПЕРЕГРЕВ: +${15 + state.meta.overheatBonus} множ. и X1.35`);
+  ctx.fx.explosion = true;
+  ctx.fx.flash = true;
+  ctx.fx.beams = true;
+}
+
+function applyBossModifier(ctx) {
+  if (!state.boss) return;
+  switch (state.boss.id) {
+    case 'void':
+      ctx.xmult *= 1.15;
+      ctx.note('Босс ПУСТОТА усилил X.');
+      ctx.fx.blackHole = true;
+      break;
+    case 'storm':
+      if (ctx.cards.length === 5) {
+        ctx.xmult *= 1.25;
+        ctx.note('Босс ШТОРМ усилил полную руку.');
+        ctx.fx.beams = true;
+      }
+      break;
+    case 'titan':
+      ctx.chips += 12;
+      ctx.note('Босс ТИТАН: +12 фишек.');
+      break;
+    case 'inferno':
+      ctx.mult += 4;
+      ctx.note('Босс ИНФЕРНО: +4 множ.');
+      ctx.fx.flash = true;
+      break;
   }
+}
 
-  if (state.boss) {
-    switch (state.boss.id) {
-      case 'void':
-        ctx.xmult *= 1.15;
-        ctx.note('Босс ПУСТОТА усилил X.');
-        ctx.fx.blackHole = true;
-        break;
-      case 'storm':
-        if (ctx.cards.length === 5) {
-          ctx.xmult *= 1.25;
-          ctx.note('Босс ШТОРМ усилил полную руку.');
-          ctx.fx.beams = true;
-        }
-        break;
-      case 'titan':
-        ctx.chips += 12;
-        ctx.note('Босс ТИТАН: +12 фишек.');
-        break;
-      case 'inferno':
-        ctx.mult += 4;
-        ctx.note('Босс ИНФЕРНО: +4 множ.');
-        ctx.fx.flash = true;
-        break;
-    }
-  }
-
-  for (const joker of state.jokers) {
-    joker.apply(ctx);
-  }
-
+function applyHandFX(ctx, handType) {
   if (handType === 'Straight Flush' || handType === 'Four of a Kind') {
     ctx.fx.explosion = true;
     ctx.fx.blackHole = true;
@@ -633,6 +615,55 @@ function evaluateSelection(cards) {
   } else if (handType === 'Flush' || handType === 'Straight' || handType === 'Full House') {
     ctx.fx.beams = true;
   }
+}
+
+function evaluateSelection(cards) {
+  if (!cards.length) {
+    const bossText = state.boss
+      ? `Босс: ${state.boss.name}. ${state.boss.desc}`
+      : 'Выбери карты снизу. Начни с пары, двух пар или захода на флеш.';
+    return {
+      handType: 'High Card',
+      handName: 'Выбери до 5 карт',
+      chips: 0,
+      mult: 1,
+      xmult: 1,
+      total: 0,
+      formula: '0 × 1 = 0',
+      note: bossText,
+      fx: {},
+      overheat: false
+    };
+  }
+
+  const handType = getPokerHand(cards);
+  const base = BASE_HANDS[handType];
+
+  const ctx = {
+    cards,
+    handType,
+    heat: state.heat,
+    handsLeftBefore: state.handsLeft,
+    chips: base.chips + cards.reduce((sum, card) => sum + CARD_SCORES[card.value], 0),
+    mult: base.mult,
+    xmult: 1,
+    notes: [],
+    fx: { explosion: false, beams: false, blackHole: false, flash: false, meteors: false },
+    overheat: false,
+    enhancedCount: cards.filter(card => !!card.enhancement).length,
+    note(msg) { if (this.notes.length < 4) this.notes.push(msg); },
+    hasEnhancement(id) { return cards.some(card => card.enhancement === id); }
+  };
+
+  applyEnhancements(ctx);
+  applyOverheat(ctx);
+  applyBossModifier(ctx);
+
+  for (const joker of state.jokers) {
+    joker.apply(ctx);
+  }
+
+  applyHandFX(ctx, handType);
 
   const total = Math.floor(ctx.chips * ctx.mult * ctx.xmult);
   let formula = `${ctx.chips} × ${ctx.mult}`;
@@ -671,6 +702,9 @@ function updateSelectionPreview() {
   el.comboName.textContent = preview.handName.toUpperCase();
   el.comboFormula.textContent = preview.formula;
   el.comboNote.textContent = preview.note;
+  el.handCount.textContent = state.selectedCards.length
+    ? `${state.selectedCards.length} / 5`
+    : '';
   el.handInfo.classList.toggle('overheat', preview.overheat || state.heat >= 100);
   FX.setScene(sceneFromPreview(preview));
 }
@@ -729,7 +763,9 @@ function updateUI() {
   el.discardsLeft.textContent = state.discardsLeft;
   el.currentScore.textContent = state.currentScore;
   el.targetScore.textContent = state.targetScore;
-  el.goalFill.style.width = `${Math.min(100, (state.currentScore / state.targetScore) * 100)}%`;
+  const goalPct = Math.min(100, (state.currentScore / state.targetScore) * 100);
+  el.goalFill.style.width = `${goalPct}%`;
+  el.goalFill.classList.toggle('goal-done', state.currentScore >= state.targetScore);
   el.heatFill.style.width = `${Math.min(100, state.heat)}%`;
   el.heatValue.textContent = `${Math.min(100, Math.floor(state.heat))}%`;
 
@@ -738,7 +774,7 @@ function updateUI() {
 }
 
 function computeHeatGain(result) {
-  let gain = 14 + Math.min(40, result.total / 34);
+  let gain = CONFIG.HEAT_GAIN_BASE + Math.min(CONFIG.HEAT_GAIN_MAX_SCORE, result.total / CONFIG.HEAT_GAIN_SCORE_DIVISOR);
 
   switch (result.handType) {
     case 'Two Pair': gain += 4; break;
@@ -771,7 +807,7 @@ function playHand() {
   state.handsLeft -= 1;
 
   if (result.overheat) {
-    state.heat = 28;
+    state.heat = CONFIG.HEAT_RESET;
   } else {
     state.heat = clamp(state.heat + computeHeatGain(result), 0, 100);
   }
@@ -786,12 +822,12 @@ function playHand() {
   setTimeout(() => {
     state.hand = state.hand.filter(card => !selectedIds.has(card.id));
     state.selectedCards = [];
-    drawCards(8 - state.hand.length);
+    drawCards(CONFIG.HAND_SIZE - state.hand.length);
     updateSelectionPreview();
     checkRoundState(result);
     updateUI();
     saveGame();
-  }, 360);
+  }, CONFIG.PLAY_ANIM_DELAY);
 }
 
 function discardCards() {
@@ -799,7 +835,9 @@ function discardCards() {
 
   const selectedIds = new Set(state.selectedCards.map(card => card.id));
   state.discardsLeft -= 1;
-  state.heat = Math.max(0, state.heat - 12);
+  state.heat = Math.max(0, state.heat - CONFIG.HEAT_DISCARD_REDUCTION);
+
+  FX.floating(`-${selectedIds.size}`, 'СБРОС', '#fb7185');
 
   el.handArea.querySelectorAll('.card').forEach(node => {
     if (selectedIds.has(node.dataset.id)) node.style.opacity = '0';
@@ -808,11 +846,11 @@ function discardCards() {
   setTimeout(() => {
     state.hand = state.hand.filter(card => !selectedIds.has(card.id));
     state.selectedCards = [];
-    drawCards(8 - state.hand.length);
+    drawCards(CONFIG.HAND_SIZE - state.hand.length);
     updateSelectionPreview();
     updateUI();
     saveGame();
-  }, 180);
+  }, CONFIG.DISCARD_ANIM_DELAY);
 }
 
 function rewardForWin(lastResult) {
@@ -969,6 +1007,7 @@ function buyOffer(kind, id) {
   if (state.money < item.price) return;
 
   state.money -= item.price;
+  state.money = Math.max(0, state.money);
 
   if (kind === 'joker') {
     state.jokers.push(item);
@@ -1161,23 +1200,8 @@ function resetRun() {
   state.selectedCards = [];
   state.jokers = [];
   state.relicsOwned = {};
-  state.meta = {
-    superRate: 0,
-    extraHands: 0,
-    extraDiscards: 0,
-    rewardBonus: 0,
-    overheatBonus: 0,
-    startHeat: 0,
-    voidBoost: 0,
-    glassBoost: 0,
-    luckyBoost: 0,
-    bossReward: 0
-  };
-  state.temp = {
-    extraHands: 0,
-    extraDiscards: 0,
-    targetMul: 1
-  };
+  state.meta = makeDefaultMeta();
+  state.temp = makeDefaultTemp();
   saveGame();
   closeResult();
   startLevel();

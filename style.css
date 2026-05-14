@@ -190,6 +190,12 @@ body[data-scene="overheat"] .arcade-bg{ filter:hue-rotate(-20deg) saturate(1.55)
   height:100%;
   background:linear-gradient(90deg,#38bdf8,#fde047,#fb7185);
   box-shadow:0 0 12px rgba(253,224,71,.24);
+  transition:width .35s ease, background .4s ease, box-shadow .4s ease;
+}
+
+#goalFill.goal-done{
+  background:linear-gradient(90deg,#4ade80,#22c55e);
+  box-shadow:0 0 16px rgba(74,222,128,.45);
 }
 
 .heat-wrap{
@@ -215,6 +221,7 @@ body[data-scene="overheat"] .arcade-bg{ filter:hue-rotate(-20deg) saturate(1.55)
   height:100%;
   background:linear-gradient(90deg,#f97316,#ef4444,#fb7185,#facc15);
   box-shadow:0 0 12px rgba(251,113,133,.4);
+  transition:width .35s ease;
 }
 
 .mods-bar{
@@ -226,6 +233,8 @@ body[data-scene="overheat"] .arcade-bg{ filter:hue-rotate(-20deg) saturate(1.55)
   overflow-x:auto;
   scrollbar-width:none;
   z-index:5;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);
+  mask-image:linear-gradient(to right,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);
 }
 
 .mods-bar::-webkit-scrollbar{
@@ -240,8 +249,8 @@ body[data-scene="overheat"] .arcade-bg{ filter:hue-rotate(-20deg) saturate(1.55)
   background:rgba(0,0,0,.78);
   border:2px solid var(--gold);
   box-shadow:2px 2px 0 rgba(253,224,71,.25);
-  font-size:11px;
-  line-height:1.06;
+  font-size:13px;
+  line-height:1.1;
   text-align:center;
 }
 
@@ -307,6 +316,14 @@ body[data-scene="overheat"] .arcade-bg{ filter:hue-rotate(-20deg) saturate(1.55)
   font-size:13px;
   line-height:1.15;
   color:var(--muted);
+}
+
+.hand-count{
+  margin-top:4px;
+  min-height:18px;
+  font-size:12px;
+  color:var(--blue);
+  letter-spacing:.06em;
 }
 
 .hand-area{
@@ -487,6 +504,7 @@ body[data-scene="overheat"] .arcade-bg{ filter:hue-rotate(-20deg) saturate(1.55)
   border-color:#000;
   box-shadow:none;
   transform:translateY(4px);
+  cursor:not-allowed;
 }
 
 .overlay{
